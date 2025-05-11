@@ -1,6 +1,4 @@
-Pour rendre le fichier README plus agréable visuellement, vous pouvez ajouter des icônes et des sections stylisées. Voici une version améliorée avec des icônes et une mise en forme plus attrayante :
 
----
 
 # 🎬 Projet de Base de Données de Streaming
 
