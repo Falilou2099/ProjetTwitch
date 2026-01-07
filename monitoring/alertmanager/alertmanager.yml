@@ -1,0 +1,103 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alertmanager@twitch-platform.local'
+  smtp_require_tls: false
+
+# Templates pour les notifications
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Route par défaut
+route:
+  receiver: 'default-receiver'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  
+  # Routes spécifiques par sévérité
+  routes:
+    # Alertes critiques
+    - match:
+        severity: critical
+      receiver: 'critical-receiver'
+      group_wait: 0s
+      repeat_interval: 5m
+      continue: true
+    
+    # Alertes warning
+    - match:
+        severity: warning
+      receiver: 'warning-receiver'
+      group_wait: 30s
+      repeat_interval: 1h
+    
+    # Alertes base de données
+    - match:
+        component: database
+      receiver: 'database-team'
+      group_by: ['alertname', 'database']
+    
+    # Alertes système
+    - match:
+        component: system
+      receiver: 'ops-team'
+
+# Receivers (destinations des alertes)
+receivers:
+  # Receiver par défaut
+  - name: 'default-receiver'
+    webhook_configs:
+      - url: 'http://localhost:5001/alerts'
+        send_resolved: true
+
+  # Alertes critiques (multiple channels)
+  - name: 'critical-receiver'
+    webhook_configs:
+      - url: 'http://localhost:5001/alerts/critical'
+        send_resolved: true
+    # Exemple avec Slack (à configurer)
+    # slack_configs:
+    #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+    #     channel: '#alerts-critical'
+    #     title: '🚨 ALERTE CRITIQUE'
+    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+  # Alertes warning
+  - name: 'warning-receiver'
+    webhook_configs:
+      - url: 'http://localhost:5001/alerts/warning'
+        send_resolved: true
+
+  # Équipe base de données
+  - name: 'database-team'
+    webhook_configs:
+      - url: 'http://localhost:5001/alerts/database'
+        send_resolved: true
+    # email_configs:
+    #   - to: 'database-team@twitch-platform.local'
+    #     headers:
+    #       Subject: '[DB Alert] {{ .GroupLabels.alertname }}'
+
+  # Équipe ops
+  - name: 'ops-team'
+    webhook_configs:
+      - url: 'http://localhost:5001/alerts/ops'
+        send_resolved: true
+
+# Inhibition rules (empêcher certaines alertes si d'autres sont actives)
+inhibit_rules:
+  # Si PostgreSQL est down, ne pas alerter sur les connexions
+  - source_match:
+      alertname: 'PostgreSQLDown'
+    target_match:
+      alertname: 'PostgreSQLTooManyConnections'
+    equal: ['database']
+  
+  # Si un conteneur est down, ne pas alerter sur son CPU/mémoire
+  - source_match:
+      alertname: 'ContainerDown'
+    target_match_re:
+      alertname: 'Container(HighCPU|HighMemory)'
+    equal: ['name']

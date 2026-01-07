@@ -1,0 +1,356 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # BASES DE DONNÉES
+  # ============================================
+  
+  # Base de données Users Service
+  users-db:
+    image: postgres:15-alpine
+    container_name: twitch-users-db
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: twitch_user
+      POSTGRES_PASSWORD: twitch_password
+    volumes:
+      - users-db-data:/var/lib/postgresql/data
+      - ./database/init/users:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - twitch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twitch_user -d users_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données Streams Service
+  streams-db:
+    image: postgres:15-alpine
+    container_name: twitch-streams-db
+    environment:
+      POSTGRES_DB: streams_db
+      POSTGRES_USER: twitch_user
+      POSTGRES_PASSWORD: twitch_password
+    volumes:
+      - streams-db-data:/var/lib/postgresql/data
+      - ./database/init/streams:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"
+    networks:
+      - twitch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twitch_user -d streams_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données Chat Service
+  chat-db:
+    image: postgres:15-alpine
+    container_name: twitch-chat-db
+    environment:
+      POSTGRES_DB: chat_db
+      POSTGRES_USER: twitch_user
+      POSTGRES_PASSWORD: twitch_password
+    volumes:
+      - chat-db-data:/var/lib/postgresql/data
+      - ./database/init/chat:/docker-entrypoint-initdb.d
+    ports:
+      - "5434:5432"
+    networks:
+      - twitch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twitch_user -d chat_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données Subscriptions Service
+  subscriptions-db:
+    image: postgres:15-alpine
+    container_name: twitch-subscriptions-db
+    environment:
+      POSTGRES_DB: subscriptions_db
+      POSTGRES_USER: twitch_user
+      POSTGRES_PASSWORD: twitch_password
+    volumes:
+      - subscriptions-db-data:/var/lib/postgresql/data
+      - ./database/init/subscriptions:/docker-entrypoint-initdb.d
+    ports:
+      - "5435:5432"
+    networks:
+      - twitch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twitch_user -d subscriptions_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données Analytics Service
+  analytics-db:
+    image: postgres:15-alpine
+    container_name: twitch-analytics-db
+    environment:
+      POSTGRES_DB: analytics_db
+      POSTGRES_USER: twitch_user
+      POSTGRES_PASSWORD: twitch_password
+    volumes:
+      - analytics-db-data:/var/lib/postgresql/data
+      - ./database/init/analytics:/docker-entrypoint-initdb.d
+    ports:
+      - "5436:5432"
+    networks:
+      - twitch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twitch_user -d analytics_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # EXPORTERS POUR PROMETHEUS
+  # ============================================
+
+  # PostgreSQL Exporter pour Users DB
+  postgres-exporter-users:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter-users
+    environment:
+      DATA_SOURCE_NAME: "postgresql://twitch_user:twitch_password@users-db:5432/users_db?sslmode=disable"
+    ports:
+      - "9187:9187"
+    networks:
+      - twitch-network
+    depends_on:
+      users-db:
+        condition: service_healthy
+
+  # PostgreSQL Exporter pour Streams DB
+  postgres-exporter-streams:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter-streams
+    environment:
+      DATA_SOURCE_NAME: "postgresql://twitch_user:twitch_password@streams-db:5432/streams_db?sslmode=disable"
+    ports:
+      - "9188:9187"
+    networks:
+      - twitch-network
+    depends_on:
+      streams-db:
+        condition: service_healthy
+
+  # PostgreSQL Exporter pour Chat DB
+  postgres-exporter-chat:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter-chat
+    environment:
+      DATA_SOURCE_NAME: "postgresql://twitch_user:twitch_password@chat-db:5432/chat_db?sslmode=disable"
+    ports:
+      - "9189:9187"
+    networks:
+      - twitch-network
+    depends_on:
+      chat-db:
+        condition: service_healthy
+
+  # PostgreSQL Exporter pour Subscriptions DB
+  postgres-exporter-subscriptions:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter-subscriptions
+    environment:
+      DATA_SOURCE_NAME: "postgresql://twitch_user:twitch_password@subscriptions-db:5432/subscriptions_db?sslmode=disable"
+    ports:
+      - "9190:9187"
+    networks:
+      - twitch-network
+    depends_on:
+      subscriptions-db:
+        condition: service_healthy
+
+  # PostgreSQL Exporter pour Analytics DB
+  postgres-exporter-analytics:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter-analytics
+    environment:
+      DATA_SOURCE_NAME: "postgresql://twitch_user:twitch_password@analytics-db:5432/analytics_db?sslmode=disable"
+    ports:
+      - "9191:9187"
+    networks:
+      - twitch-network
+    depends_on:
+      analytics-db:
+        condition: service_healthy
+
+  # ============================================
+  # OBSERVABILITÉ
+  # ============================================
+
+  # Prometheus - Collecte des métriques
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: twitch-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - twitch-network
+    depends_on:
+      - postgres-exporter-users
+      - postgres-exporter-streams
+      - postgres-exporter-chat
+      - postgres-exporter-subscriptions
+      - postgres-exporter-analytics
+
+  # Grafana - Visualisation des métriques
+  grafana:
+    image: grafana/grafana:latest
+    container_name: twitch-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    networks:
+      - twitch-network
+    depends_on:
+      - prometheus
+
+  # AlertManager - Gestion des alertes
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: twitch-alertmanager
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - "9093:9093"
+    networks:
+      - twitch-network
+
+  # Node Exporter - Métriques système
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: twitch-node-exporter
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+      - "9100:9100"
+    networks:
+      - twitch-network
+
+  # cAdvisor - Métriques des conteneurs
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: twitch-cadvisor
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "8080:8080"
+    networks:
+      - twitch-network
+
+  # ============================================
+  # REDIS - Cache et Message Broker
+  # ============================================
+  
+  redis:
+    image: redis:7-alpine
+    container_name: twitch-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - twitch-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Exporter
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    environment:
+      REDIS_ADDR: redis:6379
+    ports:
+      - "9121:9121"
+    networks:
+      - twitch-network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ============================================
+  # API GATEWAY (NGINX)
+  # ============================================
+  
+  api-gateway:
+    image: nginx:alpine
+    container_name: twitch-api-gateway
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8000:80"
+    networks:
+      - twitch-network
+    depends_on:
+      - users-db
+      - streams-db
+      - chat-db
+      - subscriptions-db
+      - analytics-db
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  users-db-data:
+  streams-db-data:
+  chat-db-data:
+  subscriptions-db-data:
+  analytics-db-data:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:
+  redis-data:
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  twitch-network:
+    driver: bridge

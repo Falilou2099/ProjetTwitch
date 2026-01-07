@@ -1,195 +1,328 @@
+# 🎮 Plateforme Twitch - Architecture Microservices
 
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com/)
+[![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 
-# 🎬 Projet de Base de Données de Streaming
+> Une plateforme de streaming vidéo inspirée de Twitch, construite avec une architecture microservices moderne, incluant une stack complète d'observabilité.
 
-## 📜 Introduction
+## 📋 Table des Matières
 
-Ce projet vise à créer une base de données pour une plateforme de streaming. La base de données est conçue pour gérer les utilisateurs, les streams, les interactions entre utilisateurs, les publicités, les abonnements, les points de chaîne, et bien plus encore.
+- [Vue d'Ensemble](#-vue-densemble)
+- [Architecture](#-architecture)
+- [Démarrage Rapide](#-démarrage-rapide)
+- [Services](#-services)
+- [Monitoring](#-monitoring)
+- [Documentation](#-documentation)
+- [Technologies](#-technologies)
 
-## 📚 Table des Matières
+## 🎯 Vue d'Ensemble
 
-1. [Introduction](#introduction)
-2. [Table des Matières](#table-des-matières)
-3. [Fonctionnalités](#fonctionnalités)
-4. [Structure de la Base de Données](#structure-de-la-base-de-données)
-   - [Modèle Conceptuel de Données (MCD)](#modèle-conceptuel-de-données-mcd)
-   - [Modèle Logique de Données (MLD)](#modèle-logique-de-données-mld)
-5. [Installation](#installation)
-6. [Utilisation](#utilisation)
-7. [Contribution](#contribution)
-8. [Licence](#licence)
+Ce projet démontre une architecture microservices complète pour une plateforme de streaming, avec :
 
-## 🚀 Fonctionnalités
+- ✅ **5 microservices indépendants** avec bases de données séparées
+- ✅ **Stack d'observabilité complète** (Prometheus, Grafana, AlertManager)
+- ✅ **Scalabilité horizontale** - Chaque service peut être scalé indépendamment
+- ✅ **Haute disponibilité** - Résilience et isolation des pannes
+- ✅ **Monitoring temps réel** - Métriques, dashboards et alertes
 
-- 👥 Gestion des utilisateurs et de leurs profils.
-- 🎥 Gestion des streams et des catégories.
-- 💰 Système de dons et d'abonnements.
-- 📢 Gestion des publicités et des campagnes publicitaires.
-- 🏆 Système de points de chaîne et de récompenses.
-- 🛡️ Modération des chats et des utilisateurs.
-- 🔍 Suivi des interactions entre utilisateurs (suivis, signalements, bannissements).
-- 📊 Analyses des streams et des performances.
+### 🎨 Fonctionnalités
 
-## 🗄️ Structure de la Base de Données
+- 👥 **Gestion des utilisateurs** - Authentification, profils, followers
+- 📺 **Streaming en direct** - Gestion des streams, catégories, VODs
+- 💬 **Chat en temps réel** - Messages, emotes, modération
+- 💰 **Système d'abonnements** - Tiers, donations, points de chaîne
+- 📊 **Analytics** - Statistiques détaillées et métriques de performance
 
-### Modèle Conceptuel de Données (MCD)
+## 🏗️ Architecture
 
-Le MCD représente les entités et leurs relations sans se soucier des détails techniques de la base de données. Voici une représentation simplifiée :
+### Microservices
 
-- **Entités Principales** :
-  - **Donations** : Enregistre les dons effectués par les utilisateurs aux streamers.
-  - **Ads** : Enregistre les publicités diffusées pendant les streams.
-  - **Moderators** : Enregistre les modérateurs associés aux streamers.
-  - **Reports** : Enregistre les signalements effectués par les utilisateurs.
-  - **Bans** : Enregistre les bannissements effectués par les modérateurs.
-  - **Chats** : Enregistre les messages de chat pendant les streams.
-  - **Emotes** : Enregistre les emotes créés par les utilisateurs.
-  - **Categories** : Enregistre les catégories de streams.
-  - **Tags** : Enregistre les tags associés aux streams.
-  - **Followers** : Enregistre les abonnements entre utilisateurs.
-  - **Advertising_Campaigns** : Enregistre les campagnes publicitaires.
-  - **Stream_Advertisements** : Enregistre les publicités diffusées pendant les streams.
-  - **Channel_Moderation_Actions** : Enregistre les actions de modération effectuées par les modérateurs.
-  - **Subscriptions_Tiers** : Enregistre les niveaux d'abonnement.
-  - **Channel_Points** : Enregistre les points de chaîne gagnés par les utilisateurs.
-  - **Channel_Points_Rewards** : Enregistre les récompenses associées aux points de chaîne.
-  - **Channel_Points_Redemptions** : Enregistre les échanges de récompenses par les utilisateurs.
-  - **Stream_Categories_History** : Enregistre l'historique des catégories de streams.
-  - **Stream_Chat_Bans** : Enregistre les bannissements de chat pendant les streams.
-  - **Stream_Events** : Enregistre les événements pendant les streams.
-  - **Achievements_1** : Enregistre les exploits réalisés par les utilisateurs.
-  - **User_achievements_1** : Enregistre les exploits obtenus par les utilisateurs.
-  - **Notifications_1** : Enregistre les notifications envoyées aux utilisateurs.
-  - **Roles_1** : Enregistre les rôles et leurs permissions.
-  - **Payments_1** : Enregistre les paiements effectués par les utilisateurs.
-  - **Stream_tags_1** : Enregistre les tags associés aux streams.
-  - **Poll_Options** : Enregistre les options de sondage.
-  - **User_Notifications_** : Enregistre les notifications lues par les utilisateurs.
-  - **RaidLogs** : Enregistre les logs de raids.
-  - **PasswordResets** : Enregistre les demandes de réinitialisation de mot de passe.
-  - **LoginAttempts** : Enregistre les tentatives de connexion des utilisateurs.
-  - **UserReports** : Enregistre les signalements effectués par les utilisateurs.
-  - **Subscriptions** : Enregistre les abonnements des utilisateurs aux streamers.
-  - **Tag_Subscriptions** : Enregistre les abonnements des utilisateurs aux tags.
-  - **Users** : Enregistre les informations des utilisateurs.
-  - **Stream_Raids** : Enregistre les raids effectués sur les streams.
-  - **Users_sessions_1** : Enregistre les sessions des utilisateurs.
-  - **Users_preferences_1** : Enregistre les préférences des utilisateurs.
-  - **User_device** : Enregistre les appareils utilisés par les utilisateurs.
-  - **SupportTickets_** : Enregistre les tickets de support créés par les utilisateurs.
-  - **AdViews_** : Enregistre les vues des publicités par les utilisateurs.
-  - **Streams** : Enregistre les streams.
-  - **VODs** : Enregistre les VODs associées aux streams.
-  - **Clips** : Enregistre les clips créés à partir des streams.
-  - **Polls** : Enregistre les sondages associés aux streams.
-  - **StreamAnalytics_** : Enregistre les analyses des streams.
+```
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+│   Users     │  │   Streams   │  │    Chat     │  │Subscriptions│  │  Analytics  │
+│   Service   │  │   Service   │  │   Service   │  │   Service   │  │   Service   │
+└──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+       │                │                │                │                │
+       ▼                ▼                ▼                ▼                ▼
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+│  users_db   │  │ streams_db  │  │   chat_db   │  │  subs_db    │  │analytics_db │
+│ Port: 5432  │  │ Port: 5433  │  │ Port: 5434  │  │ Port: 5435  │  │ Port: 5436  │
+└─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘
+```
 
-### Modèle Logique de Données (MLD)
+### Stack d'Observabilité
 
-Le MLD représente les tables et leurs relations dans la base de données. Voici une représentation simplifiée :
+```
+┌──────────────────────────────────────────────────────────┐
+│                     Grafana (Port 3000)                  │
+│              Dashboards & Visualisation                  │
+└────────────────────────┬─────────────────────────────────┘
+                         │
+┌────────────────────────▼─────────────────────────────────┐
+│                  Prometheus (Port 9090)                   │
+│              Collecte & Stockage Métriques                │
+└─────┬──────────┬──────────┬──────────┬──────────┬────────┘
+      │          │          │          │          │
+      ▼          ▼          ▼          ▼          ▼
+  [PG Exp]   [PG Exp]   [PG Exp]   [Redis]   [Node Exp]
+  Users DB   Streams    Chat DB    Exporter   System
+```
 
-- **Tables Principales** :
-  - **Donations** : id_donation (PK), user_id_, streamer_id, amount, date_creation, message
-  - **Ads** : id_ad (PK), stream_id, advertiser_name, ad_start_time, ad_end_time, ad_duration, date_creation
-  - **Moderators** : id_moderator (PK), streamer_id, date_creation, role_id
-  - **Reports** : id_report (PK), reporter_id_, reported_user_id, report_reason, date_creation, status
-  - **Bans** : id_ban (PK), user_id, moderator_id, user_id_1, ban_reason, date_creation, is_permanent
-  - **Chats** : id_chat (PK), stream_id, user_id, message, date_creation
-  - **Emotes** : id_emote (PK), name, image_url, user_id, is_global
-  - **Categories** : id_category (PK), name, description, image_url
-  - **Tags** : id_tag (PK), name, description
-  - **Followers** : id_follower (PK), follower_user_id, date_creation, followed_user_id
-  - **Advertising_Campaigns** : id_campaign (PK), start_date, end_date, budget, date_creation
-  - **Stream_Advertisements** : id_stream_ad (PK), stream_id, campaign_id, ad_start_time, ad_end_time, date_creation
-  - **Channel_Moderation_Actions** : id_mod_action (PK), moderator_id, user_id, action_type, action_reason, date_creation
-  - **Subscriptions_Tiers** : id_tier (PK), s_t_name, price
-  - **Channel_Points** : id_points (PK), user_id, streamer_id, points_amonts, date_creation
-  - **Channel_Points_Rewards** : id_reward (PK), streamer_id, reward_name, points_required, is_active
-  - **Channel_Points_Redemptions** : id_redemption (PK), reward_id, date_creation, status, user_id
-  - **Stream_Categories_History** : id_category_history (PK), stream_id, strat_time, end_time, category_id, date_creation
-  - **Stream_Chat_Bans** : id_chat_ban (PK), user_id, moderator_id, stream_id, ban_reason, date_creation, is_temporary, ban_duration
-  - **Stream_Events** : id_event (PK), stream_id, event_type, event_user_id, date_creation
-  - **Achievements_1** : id_achievments (PK), description_, Points, name
-  - **User_achievements_1** : id_Users_achievements (PK), user_id, achievement_id, date_creation
-  - **Notifications_1** : id_notification (PK), user_id, notification_type, message, is_read
-  - **Roles_1** : id_role (PK), role_name, permissions
-  - **Payments_1** : id_payment (PK), user_id, payment_method, amount, date_creation, subscription_id
-  - **Stream_tags_1** : id_stream_tag (PK), stream_id, tag_id
-  - **Poll_Options** : id_option (PK), poll_id, option_text, _vote_count
-  - **User_Notifications_** : id_notification_log (PK), id_user, id_notification, read_status, _notification_timestamp, user_id, notification_id
-  - **RaidLogs** : id_raid_log (PK), id_raid, id_user, raid_timestamp, raid_id, user_id
-  - **PasswordResets** : id_reset (PK), id_user, request_time_, reset_token, token_expiration_, user_id
-  - **LoginAttempts** : id_attempt (PK), id_user, attempt_time_, success, ip_address_, user_id
-  - **UserReports** : id_reports (PK), id_reported_user, id_reporting_user, report_reason_, report_date, report_status, user_id
-  - **Subscriptions** : id_subscription (PK), user_id, streamer_id, subscription_tier, subscription_date, is_active, tier_id, date_creation, id_tier
-  - **Tag_Subscriptions** : id_tag_subscription (PK), user_id_, tag_id, date_creation, id_tag
-  - **Users** : id_user (PK), username, email, password, date_of_creation, role, ptofile_picture, is_verified, id_follower, id_chat_ban
-  - **Stream_Raids** : id_raid (PK), stream_id, target_stream_id, id_user
-  - **Users_sessions_1** : id_session (PK), user_id, login_time, logout_time, ip_adress, date_creation, id_user
-  - **Users_preferences_1** : id_preference (PK), user_id, preference_type, valeur, id_user
-  - **User_device** : id_device (PK), user_id, device_type, device_os, date_creation, id_user
-  - **SupportTickets_** : id_ticket (PK), id_user, subject, description_, status_, created_at_, updated_at_, user_id, id_user_1
-  - **AdViews_** : id_ad_view (PK), ad_id, user_id, view_timestamp, id_user
-  - **Streams** : id_stream (PK), user_id, category_id, title, start_time, end_time, is_live, view_count, date_creation, id_chat, id_raid, id_category_history, id_user
-  - **VODs** : id_vod (PK), stream_id, title, date_creation, id_stream
-  - **Clips** : id_clip (PK), user_id, stream_id, title, date_creation, clip_url, view_count, id_stream
-  - **Polls** : id_poll (PK), stream_id, question_, date_creation, is_active, id_stream
-  - **StreamAnalytics_** : id_analytics (PK), stream_id, total_viewers_, peak_viewers, stream_duration_, id_stream
+## 🚀 Démarrage Rapide
 
-## 🛠️ Installation
+### Prérequis
 
-Pour installer et configurer la base de données, suivez ces étapes :
+- Docker 20.10+
+- Docker Compose 2.0+
+- 8GB RAM minimum
+- 20GB espace disque
 
-1. **Cloner le dépôt** :
-   ```bash
-   git clone https://github.com/votre-utilisateur/votre-depot.git
-   cd votre-depot
-   ```
+### Installation
 
-2. **Installer les dépendances** :
-   - Assurez-vous d'avoir MySQL installé sur votre machine.
-   - Créez une nouvelle base de données :
-     ```sql
-     CREATE DATABASE streaming_platform;
-     ```
+```bash
+# Cloner le repository
+git clone https://github.com/votre-username/ProjetTwitch.git
+cd ProjetTwitch
 
-3. **Exécuter le script SQL** :
-   - Importez le script SQL fourni dans le dépôt pour créer les tables et les relations :
-     ```bash
-     mysql -u votre_utilisateur -p streaming_platform < script.sql
-     ```
+# Copier la configuration
+cp .env.example .env
 
-## 📊 Utilisation
+# Démarrer tous les services
+./start.sh
 
-- **Connexion à la base de données** :
-  - Utilisez un client MySQL comme MySQL Workbench ou phpMyAdmin pour vous connecter à la base de données.
-  - Exécutez des requêtes SQL pour insérer, mettre à jour, ou supprimer des données.
+# OU manuellement
+docker compose up -d
+```
 
-- **Exemples de requêtes** :
-  - Insérer un nouvel utilisateur :
-    ```sql
-    INSERT INTO Users (username, email, password, date_of_creation, role, ptofile_picture, is_verified)
-    VALUES ('utilisateur1', 'utilisateur1@example.com', 'motdepasse', NOW(), 1, 'url_image', TRUE);
-    ```
-  - Récupérer tous les streams d'un utilisateur :
-    ```sql
-    SELECT * FROM Streams WHERE user_id = 1;
-    ```
+### Vérification
+
+```bash
+# Vérifier l'état des services
+./check-status.sh
+
+# Voir les logs
+docker compose logs -f
+```
+
+### Accès aux Interfaces
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| **Grafana** | http://localhost:3000 | admin / admin |
+| **Prometheus** | http://localhost:9090 | - |
+| **AlertManager** | http://localhost:9093 | - |
+| **cAdvisor** | http://localhost:8080 | - |
+
+## 🔧 Services
+
+### 1. Users Service (Port 5432)
+Gestion complète des utilisateurs et authentification.
+
+**Tables principales** :
+- `users` - Profils utilisateurs
+- `followers` - Relations de suivi
+- `user_roles` - Système de permissions
+- `user_settings` - Préférences utilisateur
+
+### 2. Streams Service (Port 5433)
+Gestion des streams en direct et VODs.
+
+**Tables principales** :
+- `streams` - Streams en direct
+- `categories` - Catégories de contenu
+- `vods` - Vidéos à la demande
+- `clips` - Extraits de streams
+
+### 3. Chat Service (Port 5434)
+Système de chat en temps réel avec modération.
+
+**Tables principales** :
+- `chat_messages` - Messages du chat
+- `emotes` - Emotes personnalisées
+- `chat_moderators` - Modérateurs
+- `banned_users` - Utilisateurs bannis
+
+### 4. Subscriptions Service (Port 5435)
+Gestion des abonnements et monétisation.
+
+**Tables principales** :
+- `subscriptions` - Abonnements actifs
+- `subscription_tiers` - Niveaux d'abonnement
+- `donations` - Dons
+- `channel_points` - Points de chaîne
+
+### 5. Analytics Service (Port 5436)
+Collecte et analyse des métriques.
+
+**Tables principales** :
+- `stream_analytics` - Statistiques de streams
+- `user_analytics` - Métriques utilisateurs
+- `revenue_analytics` - Analyses financières
+
+## 📊 Monitoring
+
+### Dashboards Grafana Préconfigurés
+
+#### 1. PostgreSQL Microservices
+- État des 5 bases de données
+- Connexions actives par base
+- Transactions/seconde
+- Cache Hit Ratio
+- Opérations INSERT/UPDATE/DELETE
+
+#### 2. Système & Infrastructure
+- CPU et Memory Usage
+- Conteneurs Docker actifs
+- Métriques Redis
+- État de tous les services
+
+### Métriques Clés
+
+```promql
+# État des bases
+pg_up
+
+# Connexions actives
+pg_stat_database_numbackends
+
+# Cache Hit Ratio (doit être >95%)
+rate(pg_stat_database_blks_hit[5m]) / 
+(rate(pg_stat_database_blks_hit[5m]) + rate(pg_stat_database_blks_read[5m]))
+
+# Transactions par seconde
+rate(pg_stat_database_xact_commit[5m])
+```
+
+### Alertes Configurées
+
+- ⚠️ Base de données DOWN
+- ⚠️ CPU > 80%
+- ⚠️ Mémoire > 85%
+- ⚠️ Connexions PostgreSQL > 80%
+- ⚠️ Cache Hit Ratio < 90%
+- ⚠️ Espace disque < 15%
+
+## 📚 Documentation
+
+La documentation complète est disponible au format LaTeX dans le dossier `docs/`.
+
+### Guides Disponibles
+
+- 📖 **Documentation Complète** - `docs/documentation.pdf`
+- 🏗️ **Guide Architecture** - Architecture détaillée des microservices
+- 🚀 **Guide de Déploiement** - Instructions de déploiement
+- 🔧 **Guide de Dépannage** - Résolution des problèmes courants
+- 📊 **Guide Grafana** - Configuration des dashboards
+
+### Fichiers Markdown (Référence)
+
+- `MICROSERVICES_GUIDE.md` - Pourquoi cette architecture
+- `AUDIT_REPORT.md` - Audit du schéma SQL original
+- `TROUBLESHOOTING.md` - Dépannage
+- `GRAFANA_SETUP.md` - Configuration Grafana
+
+## 🛠️ Technologies
+
+### Backend & Bases de Données
+- **PostgreSQL 15** - Base de données relationnelle
+- **Redis 7** - Cache et sessions
+- **Docker & Docker Compose** - Conteneurisation
+
+### Monitoring & Observabilité
+- **Prometheus** - Collecte de métriques
+- **Grafana** - Visualisation et dashboards
+- **AlertManager** - Gestion des alertes
+- **PostgreSQL Exporter** - Métriques PostgreSQL
+- **Redis Exporter** - Métriques Redis
+- **Node Exporter** - Métriques système
+- **cAdvisor** - Métriques conteneurs
+
+### Infrastructure
+- **NGINX** - API Gateway et reverse proxy
+- **Docker Networks** - Isolation réseau
+
+## 🔄 Commandes Utiles
+
+```bash
+# Démarrer tous les services
+./start.sh
+
+# Vérifier l'état
+./check-status.sh
+
+# Tester les bases de données
+./test-databases.sh
+
+# Corriger Prometheus
+./fix-prometheus.sh
+
+# Voir les logs
+docker compose logs -f [service]
+
+# Redémarrer un service
+docker compose restart [service]
+
+# Arrêter tout
+docker compose down
+
+# Arrêter et supprimer les volumes (⚠️ perte de données)
+docker compose down -v
+```
+
+## 📈 Performance
+
+### Scalabilité
+
+Chaque service peut être scalé indépendamment :
+
+```bash
+# Scaler le service Chat (haute charge)
+docker compose up -d --scale chat-db=3
+
+# Scaler le service Streams
+docker compose up -d --scale streams-db=2
+```
+
+### Optimisations
+
+- ✅ Index sur toutes les clés étrangères
+- ✅ Vues matérialisées pour les requêtes complexes
+- ✅ Connection pooling (PgBouncer recommandé en production)
+- ✅ Cache Redis pour les données fréquemment accédées
+- ✅ Triggers pour `updated_at` automatique
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! Pour contribuer :
+Les contributions sont les bienvenues ! N'hésitez pas à :
 
-1. Forkez le dépôt.
-2. Créez une branche pour votre fonctionnalité (`git checkout -b feature/nouvelle-fonctionnalite`).
-3. Commitez vos modifications (`git commit -m 'Ajout d'une nouvelle fonctionnalité'`).
-4. Poussez vers la branche (`git push origin feature/nouvelle-fonctionnalite`).
-5. Ouvrez une Pull Request.
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/AmazingFeature`)
+3. Commit vos changements (`git commit -m 'Add AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
 
-## 📜 Licence
+## 📝 Licence
 
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+
+## 👤 Auteur
+
+**Falilou**
+
+- GitHub: [@Falilou2099](https://github.com/Falilou2099)
+- LinkedIn: [Votre LinkedIn](https://linkedin.com/in/votre-profil)
+
+## 🙏 Remerciements
+
+- Architecture inspirée des best practices de Netflix, Uber et Spotify
+- Documentation basée sur les recommandations de Martin Fowler
+- Stack d'observabilité inspirée de SRE Google
 
 ---
 
-N'hésitez pas à adapter ce README selon vos besoins spécifiques et à ajouter des sections supplémentaires si nécessaire. Les icônes et la mise en forme améliorent la lisibilité et rendent le document plus attrayant visuellement.
+⭐ **Si ce projet vous a aidé, n'hésitez pas à lui donner une étoile !**
+
+📖 **Pour la documentation complète, consultez `docs/documentation.pdf`**

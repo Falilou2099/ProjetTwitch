@@ -1,0 +1,178 @@
+groups:
+  # ============================================
+  # ALERTES BASE DE DONNÉES
+  # ============================================
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # Base de données down
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL instance {{ $labels.database }} est down"
+          description: "La base de données {{ $labels.database }} du service {{ $labels.microservice }} ne répond pas depuis plus d'1 minute."
+
+      # Trop de connexions
+      - alert: PostgreSQLTooManyConnections
+        expr: sum by (database) (pg_stat_database_numbackends) / pg_settings_max_connections * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Trop de connexions sur {{ $labels.database }}"
+          description: "La base {{ $labels.database }} utilise {{ $value }}% de ses connexions disponibles."
+
+      # Deadlocks détectés
+      - alert: PostgreSQLDeadlocks
+        expr: rate(pg_stat_database_deadlocks[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Deadlocks détectés sur {{ $labels.database }}"
+          description: "Des deadlocks ont été détectés sur la base {{ $labels.database }}."
+
+      # Temps de réponse lent
+      - alert: PostgreSQLSlowQueries
+        expr: rate(pg_stat_database_blk_read_time[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Requêtes lentes sur {{ $labels.database }}"
+          description: "Le temps de lecture des blocs est élevé sur {{ $labels.database }}."
+
+      # Espace disque faible
+      - alert: PostgreSQLDiskSpaceLow
+        expr: (pg_database_size_bytes / 1024 / 1024 / 1024) > 8
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Espace disque faible pour {{ $labels.database }}"
+          description: "La base {{ $labels.database }} utilise {{ $value }}GB d'espace disque."
+
+  # ============================================
+  # ALERTES REDIS
+  # ============================================
+  - name: redis_alerts
+    interval: 30s
+    rules:
+      # Redis down
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis est down"
+          description: "L'instance Redis ne répond pas depuis plus d'1 minute."
+
+      # Mémoire Redis élevée
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Utilisation mémoire Redis élevée"
+          description: "Redis utilise {{ $value }}% de sa mémoire disponible."
+
+      # Trop de clients connectés
+      - alert: RedisTooManyClients
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Trop de clients connectés à Redis"
+          description: "{{ $value }} clients sont actuellement connectés à Redis."
+
+  # ============================================
+  # ALERTES SYSTÈME
+  # ============================================
+  - name: system_alerts
+    interval: 30s
+    rules:
+      # CPU élevé
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Utilisation CPU élevée"
+          description: "L'utilisation CPU est à {{ $value }}% sur {{ $labels.instance }}."
+
+      # Mémoire faible
+      - alert: LowMemory
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Mémoire disponible faible"
+          description: "Seulement {{ $value }}% de mémoire disponible sur {{ $labels.instance }}."
+
+      # Espace disque faible
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Espace disque faible"
+          description: "Seulement {{ $value }}% d'espace disque disponible sur {{ $labels.instance }}."
+
+  # ============================================
+  # ALERTES CONTENEURS
+  # ============================================
+  - name: container_alerts
+    interval: 30s
+    rules:
+      # Conteneur down
+      - alert: ContainerDown
+        expr: absent(container_last_seen{name=~".+"})
+        for: 2m
+        labels:
+          severity: critical
+          component: container
+        annotations:
+          summary: "Conteneur {{ $labels.name }} est down"
+          description: "Le conteneur {{ $labels.name }} ne répond pas."
+
+      # CPU conteneur élevé
+      - alert: ContainerHighCPU
+        expr: rate(container_cpu_usage_seconds_total{name=~".+"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "Utilisation CPU élevée pour {{ $labels.name }}"
+          description: "Le conteneur {{ $labels.name }} utilise {{ $value }}% de CPU."
+
+      # Mémoire conteneur élevée
+      - alert: ContainerHighMemory
+        expr: (container_memory_usage_bytes{name=~".+"} / container_spec_memory_limit_bytes{name=~".+"}) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "Utilisation mémoire élevée pour {{ $labels.name }}"
+          description: "Le conteneur {{ $labels.name }} utilise {{ $value }}% de sa mémoire allouée."
