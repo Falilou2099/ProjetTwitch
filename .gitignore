@@ -1,0 +1,46 @@
+# Fichiers d'environnement - SECRETS
+.env
+
+# Données des volumes Docker
+*-data/
+
+# Logs
+*.log
+logs/
+
+# Fichiers temporaires
+*.tmp
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups
+*.backup
+*.bak
+backup_*.sql
+
+# Node modules (si tu ajoutes du Node.js plus tard)
+node_modules/
+
+# Python (si tu ajoutes du Python plus tard)
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Documentation compilée
+docs/*.aux
+docs/*.log
+docs/*.toc
+docs/*.out
+docs/*.pdf
